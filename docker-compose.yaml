@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: rust_filestore_meta_pg
+    environment:
+      POSTGRES_DB: daddys_db
+      POSTGRES_USER: daddy
+      POSTGRES_PASSWORD: safe_password
+    ports:
+      - 5432:5432
+    volumes:
+      - pg_data:/var/lib/postgresql/data  # Persist data
+
+volumes:
+  pg_data:
