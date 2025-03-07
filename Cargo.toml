@@ -18,3 +18,4 @@ tokio = { version = "1.43.0", features = ["full"] }
 google-cloud-storage = "0.24.0"
 async-trait = "0.1.87"
 uuid = { version = "1.15.1", features = ["v4"] }
+serde = "1.0.218"

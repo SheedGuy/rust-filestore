@@ -17,9 +17,3 @@ pub async fn connect(url: &str) -> Result<PgPool> {
 
 // pub async fn get_users<'c>(conn: &impl PgExecutor<'c>) {
 // }
-
-// TODO:
-// - Set up DB schem
-// - Set up migration folder with db schema creation
-// - Make database functions
-    // - CRUD user
