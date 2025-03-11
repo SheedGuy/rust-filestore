@@ -27,8 +27,6 @@ async fn main() -> anyhow::Result<()> {
     // - CRUD user
 
 // TODO:
-// Update Organization Struct
-// Create DB Migration scripts
 
 // Idea:
 // Each organization stores its user assets in different buckets
