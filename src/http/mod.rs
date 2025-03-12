@@ -10,7 +10,7 @@ use axum::response::Result;
 
 use crate::context::TheGoods;
 
-fn new(goodies: TheGoods) -> Router<TheGoods> {
+fn new(goodies: TheGoods) -> Router<> {
     Router::new()
     .merge(organization::router())
     .merge(user::router())
@@ -22,7 +22,7 @@ pub async fn serve(goodie_bag: TheGoods, port: u16) -> anyhow::Result<()> {
 
     let listener = tokio::net::TcpListener::bind(("127.0.0.1", port)).await?;
 
-    axum::serve(listener, app);
+    axum::serve(listener, app).await?;
 
     Ok(())
 }

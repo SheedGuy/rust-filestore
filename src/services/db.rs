@@ -1,6 +1,5 @@
 use sqlx::postgres::{PgPool, PgPoolOptions};
 // use sqlx::{Acquire, Postgres};
-use sqlx::PgExecutor;
 use anyhow::Result;
 
 // pub trait PgAcquire<'c>: Acquire<'c, Database = Postgres> {}
@@ -14,6 +13,3 @@ pub async fn connect(url: &str) -> Result<PgPool> {
 
     Ok(pool)
 }
-
-// pub async fn get_users<'c>(conn: &impl PgExecutor<'c>) {
-// }

@@ -1,5 +1,3 @@
-use std::fmt::format;
-
 use axum::{extract::{Path, State}, http::StatusCode, Router};
 use axum::routing::{post, get};
 use axum::Json;
@@ -27,7 +25,7 @@ pub async fn get_user(
     let user = get_user_data(&ctx.db, id).await?;
 
     // psuedo auth
-    if user.organization == Organization::from_slug(ctx, &org_slug).await? {
+    if user.organization == Organization::from_slug(&ctx, &org_slug).await? {
         Ok(Json(
             ApiResponse {
                 data: user
@@ -48,7 +46,7 @@ pub async fn update_user(
     // holy unoptimized
     let user = get_user_data(&ctx.db, id).await?;
     // psuedo auth
-    if user.organization == Organization::from_slug(ctx, &org_slug).await? {
+    if user.organization == Organization::from_slug(&ctx, &org_slug).await? {
         // in theory I should only ever get 1
         match result {
             0 => Err(ApiError::BadRequest(format!("Zero rows affected when trying to update user with id: {id}").to_string())),
@@ -67,13 +65,27 @@ pub async fn create_user(
     Path(org_slug): Path<String>,
     Json(payload): Json<CreateUser>
 ) -> ApiResult<StatusCode> {
+    let user_org =  Organization::from_slug(&ctx, &org_slug).await?;
 
+    let new_user_obj = payload.to_user(user_org);
+
+    create_new_user(&ctx.db, new_user_obj).await?;
+
+    Ok(StatusCode::CREATED)
 }
 
 pub async fn get_org_users(
     State(ctx): State<TheGoods>,
     Path(org_slug): Path<String>
 ) -> ApiResult<Json<ApiResponse<Vec<User>>>> {
+
+    let targ_org = Organization::from_slug(&ctx, &org_slug).await?;
+
+    Ok(
+        Json(ApiResponse {
+            data: list_org_users(&ctx.db, targ_org).await?
+        })
+    )
     
 }
 

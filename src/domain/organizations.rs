@@ -15,12 +15,12 @@ pub struct Organization {
 
 #[derive(Deserialize)]
 pub struct CreateOrganization {
-    name: String,
-    slug: String
+    pub name: String,
+    pub slug: String
 }
 
 impl Organization {
-    pub async fn from_slug(ctx: TheGoods, slug: &str) -> anyhow::Result<Self> {
+    pub async fn from_slug(ctx: &TheGoods, slug: &str) -> anyhow::Result<Self> {
         Ok(organizations::get_org_data_by_slug(&ctx.db, slug).await?)
     }
 }

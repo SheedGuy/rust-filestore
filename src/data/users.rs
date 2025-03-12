@@ -1,7 +1,9 @@
+use anyhow::Ok;
 use axum::http::StatusCode;
-use sqlx::PgPool;
+use sqlx::{any, PgPool};
 use uuid::Uuid;
 
+use crate::domain::organizations::Organization;
 use crate::http::ApiResult;
 use crate::domain::users::{User, CreateUser};
 
@@ -60,5 +62,56 @@ pub async fn update_user_data(conn: &PgPool, user_id: Uuid, updates: CreateUser)
         updates.email,
         user_id
     ).execute(conn).await?.rows_affected())
+
+}
+
+pub async fn create_new_user(conn: &PgPool, new_user: User) -> anyhow::Result<()> {
+    // dont actually need transactions here, just playing with them
+    let mut tx = conn.begin().await?;
+
+    sqlx::query!(
+        r#"
+        insert into "users"
+        (user_id, f_name, l_name, email, org_id)
+        values ($1, $2, $3, $4, $5)
+        "#,
+        new_user.user_id,
+        new_user.f_name,
+        new_user.l_name,
+        new_user.email,
+        new_user.organization.org_id
+    ).execute(&mut *tx).await?;
+
+    tx.commit().await?;
+
+    Ok(())
+}
+
+pub async fn list_org_users(conn: &PgPool, org: Organization) -> anyhow::Result<Vec<User>> {
+    
+    Ok(
+        sqlx::query_as::<_, User>(
+            r#"
+            SELECT 
+                u.user_id, 
+                u.f_name, 
+                u.l_name, 
+                u.email, 
+                u.avatar_id, 
+                o.org_id,
+                o.org_name,
+                o.slug,
+                o.bucket_name
+            from
+                "users" u
+            INNER JOIN
+                "organizations" o
+            USING  (org_id)
+            WHERE u.org_id = $1 
+            "#
+        ).bind(org.org_id)
+        .fetch_all(conn).await?
+    )
+
 
 }
