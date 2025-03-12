@@ -1,8 +1,9 @@
+use axum::http::StatusCode;
 use sqlx::PgPool;
 use uuid::Uuid;
 
 use crate::http::ApiResult;
-use crate::domain::users::*;
+use crate::domain::users::{User, CreateUser};
 
 
 // struct UserRow {
@@ -39,4 +40,25 @@ pub async fn get_user_data(conn: &PgPool, user_id: Uuid) -> anyhow::Result<User>
         .bind(user_id)
         .fetch_one(conn)
         .await?)
+}
+
+
+pub async fn update_user_data(conn: &PgPool, user_id: Uuid, updates: CreateUser) -> anyhow::Result<u64> {
+
+    // this should be rewritten better
+    Ok(sqlx::query!(
+        r#"
+        update "users"
+        set
+            f_name = $1,
+            l_name = $2,
+            email = $3
+        where user_id = $4
+        "#,
+        updates.f_name,
+        updates.l_name,
+        updates.email,
+        user_id
+    ).execute(conn).await?.rows_affected())
+
 }

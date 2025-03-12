@@ -1,3 +1,5 @@
+use std::fmt::format;
+
 use axum::{extract::{Path, State}, http::StatusCode, Router};
 use axum::routing::{post, get};
 use axum::Json;
@@ -24,10 +26,8 @@ pub async fn get_user(
 ) -> ApiResult<Json<ApiResponse<User>>> {
     let user = get_user_data(&ctx.db, id).await?;
 
-    let sender_org = Organization::from_slug(ctx, &org_slug).await?;
-
     // psuedo auth
-    if user.organization == sender_org {
+    if user.organization == Organization::from_slug(ctx, &org_slug).await? {
         Ok(Json(
             ApiResponse {
                 data: user
@@ -40,9 +40,25 @@ pub async fn get_user(
 
 pub async fn update_user(
     State(ctx): State<TheGoods>,
-    Path(org_slug): Path<String>,
+    Path((org_slug, id)): Path<(String, Uuid)>,
     Json(payload): Json<CreateUser>
 ) -> ApiResult<StatusCode> {
+    let result = update_user_data(&ctx.db, id, payload).await?;
+
+    // holy unoptimized
+    let user = get_user_data(&ctx.db, id).await?;
+    // psuedo auth
+    if user.organization == Organization::from_slug(ctx, &org_slug).await? {
+        // in theory I should only ever get 1
+        match result {
+            0 => Err(ApiError::BadRequest(format!("Zero rows affected when trying to update user with id: {id}").to_string())),
+            1 => Ok(StatusCode::NO_CONTENT),
+            _ => Err(ApiError::BadRequest(format!("{result} rows affected when trying to update user with id: {id}").to_string()))
+        }
+    } else {
+        Err(ApiError::Unauthorized)
+    }
+
 
 }
 

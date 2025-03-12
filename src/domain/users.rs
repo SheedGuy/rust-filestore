@@ -16,7 +16,7 @@ pub struct User {
 
 #[derive(Deserialize)]
 pub struct CreateUser {
-    f_name: String,
-    l_name: String,
-    email: String
+    pub f_name: String,
+    pub l_name: String,
+    pub email: String
 }
