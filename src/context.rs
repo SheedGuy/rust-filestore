@@ -6,7 +6,7 @@ pub struct TheGoods {
 }
 
 impl TheGoods {
-    pub async fn new(db: PgPool) -> Self {
+    pub fn new(db: PgPool) -> Self {
         TheGoods { db }
     }
 }

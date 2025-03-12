@@ -2,7 +2,7 @@ use clap::Parser;
 
 use file_store_with_metadata::config::Config;
 use file_store_with_metadata::context::TheGoods;
-use file_store_with_metadata::http::organization;
+use file_store_with_metadata::http;
 use file_store_with_metadata::services::db::connect;
 // use file_store_with_metadata::services::gcs::GCSClient;
 
@@ -17,14 +17,17 @@ async fn main() -> anyhow::Result<()> {
 
     let goodies = TheGoods::new(db);
 
+    http::serve(goodies, 3000).await?;
+
     Ok(())
 }
 
 // TODO:
-// - Make database functions
-// - CRUD user
-
-// TODO:
+// - Test User/Org CRUD endpoints w/ Postman
+// - Create 3 permanent test orgs
+//   - "Need" to be permanent so I can create the buckets and leave them alone afterwards
+// - Start planning media endpoints/storage
+// - Should updates/creates both be POSTs?
 
 // Idea:
 // Each organization stores its user assets in different buckets

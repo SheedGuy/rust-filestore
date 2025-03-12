@@ -1,11 +1,9 @@
 use anyhow::Ok;
-use axum::http::StatusCode;
-use sqlx::{any, PgPool};
+use sqlx::PgPool;
 use uuid::Uuid;
 
 use crate::domain::organizations::Organization;
 use crate::domain::users::{CreateUser, User};
-use crate::http::ApiResult;
 
 // struct UserRow {
 //     user_id: Option<Uuid>,

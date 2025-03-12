@@ -15,7 +15,7 @@ pub async fn get_org_data_by_slug(conn: &PgPool, slug: &str) -> anyhow::Result<O
             from "organizations"
             where slug = $1
             "#,
-        slug.clone()
+        slug
     )
     .fetch_one(conn)
     .await?)
