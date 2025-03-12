@@ -7,9 +7,7 @@ use anyhow::Result;
 // impl<'c, T> PgAcquire<'c> for T where T: Acquire<'c, Database = Postgres> {}
 
 pub async fn connect(url: &str) -> Result<PgPool> {
-    let pool = PgPoolOptions::new()
-    .connect(url)
-    .await?;
+    let pool = PgPoolOptions::new().connect(url).await?;
 
     Ok(pool)
 }

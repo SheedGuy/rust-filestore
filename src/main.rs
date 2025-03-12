@@ -1,11 +1,10 @@
 use clap::Parser;
 
 use file_store_with_metadata::config::Config;
-use file_store_with_metadata::services::db::connect;
 use file_store_with_metadata::context::TheGoods;
 use file_store_with_metadata::http::organization;
+use file_store_with_metadata::services::db::connect;
 // use file_store_with_metadata::services::gcs::GCSClient;
-
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -21,10 +20,9 @@ async fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-
 // TODO:
 // - Make database functions
-    // - CRUD user
+// - CRUD user
 
 // TODO:
 

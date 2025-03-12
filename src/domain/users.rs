@@ -1,5 +1,5 @@
-use uuid::Uuid;
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 use super::organizations::Organization;
 
@@ -18,7 +18,7 @@ pub struct User {
 pub struct CreateUser {
     pub f_name: String,
     pub l_name: String,
-    pub email: String
+    pub email: String,
 }
 
 impl CreateUser {
@@ -29,7 +29,7 @@ impl CreateUser {
             l_name: self.l_name,
             email: self.email,
             avatar_id: None,
-            organization: org
+            organization: org,
         }
     }
 }

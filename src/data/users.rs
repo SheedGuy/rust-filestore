@@ -4,9 +4,8 @@ use sqlx::{any, PgPool};
 use uuid::Uuid;
 
 use crate::domain::organizations::Organization;
+use crate::domain::users::{CreateUser, User};
 use crate::http::ApiResult;
-use crate::domain::users::{User, CreateUser};
-
 
 // struct UserRow {
 //     user_id: Option<Uuid>,
@@ -18,7 +17,7 @@ use crate::domain::users::{User, CreateUser};
 //     org_id: Option<Uuid>,
 //     org_name: Option<String>,
 //     slug: Option<String>,
-//     bucket_name: Option<String>,   
+//     bucket_name: Option<String>,
 // }
 
 pub async fn get_user_data(conn: &PgPool, user_id: Uuid) -> anyhow::Result<User> {
@@ -38,15 +37,18 @@ pub async fn get_user_data(conn: &PgPool, user_id: Uuid) -> anyhow::Result<User>
         INNER JOIN
             "organizations" o
         USING  (org_id)
-        WHERE u.user_id = $1"#)
-        .bind(user_id)
-        .fetch_one(conn)
-        .await?)
+        WHERE u.user_id = $1"#,
+    )
+    .bind(user_id)
+    .fetch_one(conn)
+    .await?)
 }
 
-
-pub async fn update_user_data(conn: &PgPool, user_id: Uuid, updates: CreateUser) -> anyhow::Result<u64> {
-
+pub async fn update_user_data(
+    conn: &PgPool,
+    user_id: Uuid,
+    updates: CreateUser,
+) -> anyhow::Result<u64> {
     // this should be rewritten better
     Ok(sqlx::query!(
         r#"
@@ -61,8 +63,10 @@ pub async fn update_user_data(conn: &PgPool, user_id: Uuid, updates: CreateUser)
         updates.l_name,
         updates.email,
         user_id
-    ).execute(conn).await?.rows_affected())
-
+    )
+    .execute(conn)
+    .await?
+    .rows_affected())
 }
 
 pub async fn create_new_user(conn: &PgPool, new_user: User) -> anyhow::Result<()> {
@@ -80,7 +84,9 @@ pub async fn create_new_user(conn: &PgPool, new_user: User) -> anyhow::Result<()
         new_user.l_name,
         new_user.email,
         new_user.organization.org_id
-    ).execute(&mut *tx).await?;
+    )
+    .execute(&mut *tx)
+    .await?;
 
     tx.commit().await?;
 
@@ -88,10 +94,8 @@ pub async fn create_new_user(conn: &PgPool, new_user: User) -> anyhow::Result<()
 }
 
 pub async fn list_org_users(conn: &PgPool, org: Organization) -> anyhow::Result<Vec<User>> {
-    
-    Ok(
-        sqlx::query_as::<_, User>(
-            r#"
+    Ok(sqlx::query_as::<_, User>(
+        r#"
             SELECT 
                 u.user_id, 
                 u.f_name, 
@@ -108,10 +112,9 @@ pub async fn list_org_users(conn: &PgPool, org: Organization) -> anyhow::Result<
                 "organizations" o
             USING  (org_id)
             WHERE u.org_id = $1 
-            "#
-        ).bind(org.org_id)
-        .fetch_all(conn).await?
+            "#,
     )
-
-
+    .bind(org.org_id)
+    .fetch_all(conn)
+    .await?)
 }

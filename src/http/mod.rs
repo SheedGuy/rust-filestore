@@ -1,20 +1,19 @@
-pub mod user;
 pub mod organization;
+pub mod user;
 
 use axum::http::StatusCode;
-use axum::{Json, Router};
-use axum::response::{IntoResponse, Response};
-use serde::Serialize;
 use axum::response::Result;
-
+use axum::response::{IntoResponse, Response};
+use axum::{Json, Router};
+use serde::Serialize;
 
 use crate::context::TheGoods;
 
-fn new(goodies: TheGoods) -> Router<> {
+fn new(goodies: TheGoods) -> Router {
     Router::new()
-    .merge(organization::router())
-    .merge(user::router())
-    .with_state(goodies)
+        .merge(organization::router())
+        .merge(user::router())
+        .with_state(goodies)
 }
 
 pub async fn serve(goodie_bag: TheGoods, port: u16) -> anyhow::Result<()> {
@@ -31,20 +30,17 @@ pub type ApiResult<T> = Result<T, ApiError>;
 
 #[derive(Serialize)]
 pub struct ApiResponse<T> {
-    data: T
+    data: T,
 }
 
 impl<T> ApiResponse<T> {
     pub fn new(data: T) -> Self {
-        Self {
-            data
-        }
+        Self { data }
     }
 }
 
 #[derive(Debug, thiserror::Error)]
 pub enum ApiError {
-
     #[error("unauthorized")]
     Unauthorized,
 
@@ -68,26 +64,27 @@ struct ApiErrorResponse {
 }
 
 impl IntoResponse for ApiError {
-
     fn into_response(self) -> Response {
         match &self {
-            Self::Sqlx(ref e) =>  match e {
+            Self::Sqlx(ref e) => match e {
                 sqlx::Error::RowNotFound => {
                     return StatusCode::NOT_FOUND.into_response();
                 }
 
-                _ => {tracing::error!("SQLx error: {:?}", e)}
+                _ => {
+                    tracing::error!("SQLx error: {:?}", e)
+                }
             },
             Self::Anyhow(_) => tracing::error!("{}", self),
-            _ => tracing::warn!("{}", self)
+            _ => tracing::warn!("{}", self),
         }
 
         Json(ApiErrorResponse {
             code: self.status_code().as_u16(),
-            detail: self.details()
-        }).into_response()
+            detail: self.details(),
+        })
+        .into_response()
     }
-    
 }
 
 impl ApiError {
@@ -102,10 +99,8 @@ impl ApiError {
 
     fn details(&self) -> Option<String> {
         match self {
-            Self::BadRequest(detail) =>  {
-                Some(detail.clone())
-            },
-            _ => None
+            Self::BadRequest(detail) => Some(detail.clone()),
+            _ => None,
         }
     }
 }

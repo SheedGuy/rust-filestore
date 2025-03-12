@@ -1,6 +1,6 @@
 // use anyhow::{Error, Result};
-use uuid::Uuid;
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 use crate::context::TheGoods;
 use crate::data::organizations;
@@ -10,13 +10,18 @@ pub struct Organization {
     pub org_id: Uuid,
     pub name: String,
     pub slug: String,
-    pub bucket_name: String
+    pub bucket_name: String,
 }
 
 #[derive(Deserialize)]
 pub struct CreateOrganization {
     pub name: String,
-    pub slug: String
+    pub slug: String,
+}
+
+#[derive(Deserialize)]
+pub struct UpdateOrg {
+    pub name: String,
 }
 
 impl Organization {
