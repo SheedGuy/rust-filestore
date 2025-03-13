@@ -1,24 +1,10 @@
-use anyhow::Ok;
-use sqlx::PgPool;
+use sqlx::{PgPool, Postgres, Result, Transaction};
 use uuid::Uuid;
 
 use crate::domain::organizations::Organization;
 use crate::domain::users::{CreateUser, User};
 
-// struct UserRow {
-//     user_id: Option<Uuid>,
-//     f_name: Option<String>,
-//     l_name: Option<String>,
-//     email: Option<String>,
-//     avatar_id: Option<Uuid>,
-
-//     org_id: Option<Uuid>,
-//     org_name: Option<String>,
-//     slug: Option<String>,
-//     bucket_name: Option<String>,
-// }
-
-pub async fn get_user_data(conn: &PgPool, user_id: Uuid) -> anyhow::Result<User> {
+pub async fn get_user_data(conn: &PgPool, user_id: Uuid) -> Result<User> {
     Ok(sqlx::query_as::<_, User>(
         r#"SELECT 
             u.user_id, 
@@ -27,7 +13,7 @@ pub async fn get_user_data(conn: &PgPool, user_id: Uuid) -> anyhow::Result<User>
             u.email, 
             u.avatar_id, 
             o.org_id,
-            o.org_name,
+            o.org_name as name,
             o.slug,
             o.bucket_name
         from
@@ -43,10 +29,10 @@ pub async fn get_user_data(conn: &PgPool, user_id: Uuid) -> anyhow::Result<User>
 }
 
 pub async fn update_user_data(
-    conn: &PgPool,
+    conn: &mut Transaction<'_, Postgres>,
     user_id: Uuid,
     updates: CreateUser,
-) -> anyhow::Result<u64> {
+) -> Result<u64> {
     // this should be rewritten better
     Ok(sqlx::query!(
         r#"
@@ -62,12 +48,12 @@ pub async fn update_user_data(
         updates.email,
         user_id
     )
-    .execute(conn)
+    .execute(&mut **conn)
     .await?
     .rows_affected())
 }
 
-pub async fn create_new_user(conn: &PgPool, new_user: User) -> anyhow::Result<()> {
+pub async fn create_new_user(conn: &PgPool, new_user: User) -> Result<()> {
     // dont actually need transactions here, just playing with them
     let mut tx = conn.begin().await?;
 
@@ -91,7 +77,7 @@ pub async fn create_new_user(conn: &PgPool, new_user: User) -> anyhow::Result<()
     Ok(())
 }
 
-pub async fn list_org_users(conn: &PgPool, org: Organization) -> anyhow::Result<Vec<User>> {
+pub async fn list_org_users(conn: &PgPool, org: Organization) -> Result<Vec<User>> {
     Ok(sqlx::query_as::<_, User>(
         r#"
             SELECT 
@@ -101,7 +87,7 @@ pub async fn list_org_users(conn: &PgPool, org: Organization) -> anyhow::Result<
                 u.email, 
                 u.avatar_id, 
                 o.org_id,
-                o.org_name,
+                o.org_name as name,
                 o.slug,
                 o.bucket_name
             from

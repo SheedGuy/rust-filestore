@@ -43,7 +43,9 @@ pub async fn update_user(
     Path((org_slug, id)): Path<(String, Uuid)>,
     Json(payload): Json<CreateUser>,
 ) -> ApiResult<StatusCode> {
-    let result = update_user_data(&ctx.db, id, payload).await?;
+    let mut tx = ctx.db.begin().await?;
+
+    let result = update_user_data(&mut tx, id, payload).await?;
 
     // holy unoptimized
     let user = get_user_data(&ctx.db, id).await?;
@@ -51,16 +53,27 @@ pub async fn update_user(
     if user.organization == Organization::from_slug(&ctx, &org_slug).await? {
         // in theory I should only ever get 1
         match result {
-            0 => Err(ApiError::BadRequest(
-                format!("Zero rows affected when trying to update user with id: {id}").to_string(),
-            )),
-            1 => Ok(StatusCode::NO_CONTENT),
-            _ => Err(ApiError::BadRequest(
-                format!("{result} rows affected when trying to update user with id: {id}")
-                    .to_string(),
-            )),
+            0 => {
+                tx.rollback().await?;
+                Err(ApiError::BadRequest(
+                    format!("Zero rows affected when trying to update user with id: {id}")
+                        .to_string(),
+                ))
+            }
+            1 => {
+                tx.commit().await?;
+                Ok(StatusCode::NO_CONTENT)
+            }
+            _ => {
+                tx.rollback().await?;
+                Err(ApiError::BadRequest(
+                    format!("{result} rows affected when trying to update user with id: {id}")
+                        .to_string(),
+                ))
+            }
         }
     } else {
+        tx.rollback().await?;
         Err(ApiError::Unauthorized)
     }
 }
@@ -89,6 +102,3 @@ pub async fn get_org_users(
         data: list_org_users(&ctx.db, targ_org).await?,
     }))
 }
-
-// TODO:
-//   Write remaining functions

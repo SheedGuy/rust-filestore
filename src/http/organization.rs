@@ -13,7 +13,7 @@ use super::{ApiResponse, ApiResult};
 pub fn router() -> Router<TheGoods> {
     Router::new()
         .route("/organization/create", post(create_org))
-        .route("/organizations/list", get(get_all_orgs))
+        .route("/organization/list", get(get_all_orgs))
         .route("/{org_slug}", post(update_org).get(get_one_org))
 }
 
@@ -56,7 +56,12 @@ pub async fn update_org(
     Path(org_slug): Path<String>,
     Json(payload): Json<UpdateOrg>,
 ) -> ApiResult<StatusCode> {
-    update_org_name(&ctx.db, &org_slug, &payload.name).await?;
+    // Need to check if org exists
+    let valid_org = get_org_data_by_slug(&ctx.db, &org_slug).await?;
+
+    // This is because UPDATE does not throw an error if zero rows meet the where condition, i.e. no update occurs
+    // https://www.postgresql.org/docs/current/dml-update.html
+    update_org_name(&ctx.db, valid_org.org_id, &payload.name).await?;
 
     Ok(StatusCode::NO_CONTENT)
 }

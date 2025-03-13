@@ -1,4 +1,5 @@
 use clap::Parser;
+use tracing_subscriber;
 
 use file_store_with_metadata::config::Config;
 use file_store_with_metadata::context::TheGoods;
@@ -11,6 +12,8 @@ async fn main() -> anyhow::Result<()> {
     // Load env vars
     _ = dotenvy::dotenv();
     let config = Config::parse();
+
+    tracing_subscriber::fmt::init();
 
     let db = connect(&config.database_url).await?;
     // let gcs = GCSClient::new().await?;
@@ -27,7 +30,7 @@ async fn main() -> anyhow::Result<()> {
 // - Create 3 permanent test orgs
 //   - "Need" to be permanent so I can create the buckets and leave them alone afterwards
 // - Start planning media endpoints/storage
-// - Should updates/creates both be POSTs?
+// - OpenApi (utoipa)
 
 // Idea:
 // Each organization stores its user assets in different buckets

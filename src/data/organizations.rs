@@ -1,9 +1,9 @@
-use sqlx::PgPool;
+use sqlx::{PgPool, Result};
 use uuid::Uuid;
 
 use crate::domain::organizations::Organization;
 
-pub async fn get_org_data_by_slug(conn: &PgPool, slug: &str) -> anyhow::Result<Organization> {
+pub async fn get_org_data_by_slug(conn: &PgPool, slug: &str) -> Result<Organization> {
     Ok(sqlx::query_as!(
         Organization,
         r#"
@@ -21,7 +21,7 @@ pub async fn get_org_data_by_slug(conn: &PgPool, slug: &str) -> anyhow::Result<O
     .await?)
 }
 
-pub async fn get_org_data_by_id(conn: &PgPool, org_id: Uuid) -> anyhow::Result<Organization> {
+pub async fn get_org_data_by_id(conn: &PgPool, org_id: Uuid) -> Result<Organization> {
     Ok(sqlx::query_as!(
         Organization,
         r#"
@@ -34,10 +34,7 @@ pub async fn get_org_data_by_id(conn: &PgPool, org_id: Uuid) -> anyhow::Result<O
     .await?)
 }
 
-pub async fn create_and_return(
-    conn: &PgPool,
-    new_org: Organization,
-) -> anyhow::Result<Organization> {
+pub async fn create_and_return(conn: &PgPool, new_org: Organization) -> Result<Organization> {
     sqlx::query!(
         r#"
         insert into "organizations"
@@ -55,7 +52,7 @@ pub async fn create_and_return(
     get_org_data_by_id(conn, new_org.org_id).await
 }
 
-pub async fn list_all_orgs(conn: &PgPool) -> anyhow::Result<Vec<Organization>> {
+pub async fn list_all_orgs(conn: &PgPool) -> Result<Vec<Organization>> {
     Ok(sqlx::query_as!(
         Organization,
         r#"
@@ -66,15 +63,15 @@ pub async fn list_all_orgs(conn: &PgPool) -> anyhow::Result<Vec<Organization>> {
     .await?)
 }
 
-pub async fn update_org_name(conn: &PgPool, org_slug: &str, new_name: &str) -> anyhow::Result<()> {
+pub async fn update_org_name(conn: &PgPool, org_id: Uuid, new_name: &str) -> Result<()> {
     sqlx::query!(
         r#"
         update "organizations"
         set org_name = $1
-        where slug = $2
+        where org_id = $2
         "#,
         new_name,
-        org_slug
+        org_id
     )
     .execute(conn)
     .await?;
