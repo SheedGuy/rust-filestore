@@ -102,3 +102,23 @@ pub async fn list_org_users(conn: &PgPool, org: Organization) -> Result<Vec<User
     .fetch_all(conn)
     .await?)
 }
+
+pub async fn update_user_avatar(
+    tx: &mut Transaction<'_, Postgres>,
+    user: User,
+    avatar_id: Uuid,
+) -> Result<()> {
+    sqlx::query!(
+        r#"
+        update "users"
+        set avatar_id = $1
+        where user_id = $2
+        "#,
+        avatar_id,
+        user.user_id
+    )
+    .execute(&mut **tx)
+    .await?;
+
+    Ok(())
+}

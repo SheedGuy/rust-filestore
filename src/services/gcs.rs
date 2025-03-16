@@ -7,6 +7,8 @@ use google_cloud_storage::http::objects::{download::Range, upload::*, Object};
 
 const BUCKET_NAME: &str = "filestore-meta";
 
+// Implements Clone + Send + Sync. In theory thread-safe. Lets test that theory.
+#[derive(Clone)]
 pub struct GCSClient {
     gcs_client: Client,
 }

@@ -14,7 +14,7 @@ sqlx = { version = "0.8", features = [
 anyhow = "1.0"
 clap = { version = "4.5.31", features = ["derive", "env"] }
 dotenvy = "0.15.7"
-axum = "0.8.1"
+axum = { version = "0.8.1", features = ["multipart"] }
 tokio = { version = "1.43.0", features = ["full"] }
 google-cloud-storage = "0.24.0"
 async-trait = "0.1.87"
@@ -24,3 +24,4 @@ thiserror = "2.0.12"
 tracing = "0.1.41"
 axum-macros = "0.5.0"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter", "fmt", "std"] }
+mime = "0.3.17"

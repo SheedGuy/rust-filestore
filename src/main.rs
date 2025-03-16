@@ -5,7 +5,7 @@ use file_store_with_metadata::config::Config;
 use file_store_with_metadata::context::TheGoods;
 use file_store_with_metadata::http;
 use file_store_with_metadata::services::db::connect;
-// use file_store_with_metadata::services::gcs::GCSClient;
+use file_store_with_metadata::services::gcs::GCSClient;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -16,9 +16,9 @@ async fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt::init();
 
     let db = connect(&config.database_url).await?;
-    // let gcs = GCSClient::new().await?;
+    let gcs = GCSClient::new().await?;
 
-    let goodies = TheGoods::new(db);
+    let goodies = TheGoods::new(db, gcs);
 
     http::serve(goodies, 3000).await?;
 
@@ -26,9 +26,7 @@ async fn main() -> anyhow::Result<()> {
 }
 
 // TODO:
-// - Test User/Org CRUD endpoints w/ Postman
-// - Create 3 permanent test orgs
-//   - "Need" to be permanent so I can create the buckets and leave them alone afterwards
+// - Delete endpoints for Org and User
 // - Start planning media endpoints/storage
 // - OpenApi (utoipa)
 

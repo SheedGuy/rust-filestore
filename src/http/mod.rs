@@ -1,6 +1,8 @@
+pub mod media;
 pub mod organization;
 pub mod user;
 
+use axum::extract::multipart::MultipartError;
 use axum::http::StatusCode;
 use axum::response::Result;
 use axum::response::{IntoResponse, Response};
@@ -9,6 +11,10 @@ use serde::Serialize;
 use tokio::signal;
 
 use crate::context::TheGoods;
+
+/*
+    INITIALIZATION
+*/
 
 fn new(goodies: TheGoods) -> Router {
     Router::new()
@@ -41,6 +47,10 @@ async fn graceful_shutdown() {
     .await;
 }
 
+/*
+    ERROR HANDLING
+*/
+
 pub type ApiResult<T> = Result<T, ApiError>;
 
 #[derive(Serialize)]
@@ -70,6 +80,9 @@ pub enum ApiError {
 
     #[error("internal: {0:?}")]
     Anyhow(#[from] anyhow::Error),
+
+    #[error("Multipart: {0:?}")]
+    Multipart(#[from] MultipartError),
 }
 
 // In what case do I want to return raw status code vs a 200 with the error in a response
@@ -122,3 +135,7 @@ impl ApiError {
         }
     }
 }
+
+/*
+    IMAGE TYPE PARSING
+*/
