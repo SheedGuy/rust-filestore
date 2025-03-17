@@ -105,7 +105,7 @@ pub async fn list_org_users(conn: &PgPool, org: Organization) -> Result<Vec<User
 
 pub async fn update_user_avatar(
     tx: &mut Transaction<'_, Postgres>,
-    user: User,
+    user: &User,
     avatar_id: Uuid,
 ) -> Result<()> {
     sqlx::query!(

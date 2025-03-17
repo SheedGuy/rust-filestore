@@ -20,6 +20,7 @@ fn new(goodies: TheGoods) -> Router {
     Router::new()
         .merge(organization::router())
         .merge(user::router())
+        .merge(media::router())
         .with_state(goodies)
 }
 

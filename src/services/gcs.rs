@@ -1,11 +1,15 @@
 use anyhow::Result;
+use axum::body::Body;
+use axum::http::header::CONTENT_TYPE;
+use axum::http::{HeaderMap, HeaderValue};
+use axum::response::{IntoResponse, Response};
 use google_cloud_storage::client::{Client, ClientConfig};
 use google_cloud_storage::http::buckets::list::*;
 use google_cloud_storage::http::buckets::Bucket;
 use google_cloud_storage::http::objects::get::GetObjectRequest;
 use google_cloud_storage::http::objects::{download::Range, upload::*, Object};
 
-const BUCKET_NAME: &str = "filestore-meta";
+use crate::domain::media;
 
 // Implements Clone + Send + Sync. In theory thread-safe. Lets test that theory.
 #[derive(Clone)]
@@ -49,9 +53,10 @@ impl GCSClient {
         name: &str,
         image_data: Vec<u8>,
         content_type: &str,
+        bucket_name: &str,
     ) -> Result<Object> {
         let upload_req = UploadObjectRequest {
-            bucket: BUCKET_NAME.to_string(),
+            bucket: bucket_name.to_string().clone().to_lowercase(),
             ..Default::default()
         };
 
@@ -67,9 +72,9 @@ impl GCSClient {
             .await?)
     }
 
-    pub async fn get_image(self: &Self, name: &str) -> Result<Vec<u8>> {
+    pub async fn get_image(self: &Self, name: &str, bucket_name: &str) -> Result<Vec<u8>> {
         let download_req = GetObjectRequest {
-            bucket: BUCKET_NAME.to_string(),
+            bucket: bucket_name.to_string().clone().to_lowercase(),
             object: name.to_string(),
             ..Default::default()
         };
@@ -79,6 +84,32 @@ impl GCSClient {
             .download_object(&download_req, &Range::default())
             .await?)
     }
-}
 
-// TODO:
+    pub async fn get_image_stream(
+        self: &Self,
+        media: &media::Media,
+        bucket_name: &str,
+    ) -> Result<Response> {
+        let download_req = GetObjectRequest {
+            bucket: bucket_name.to_string().clone().to_lowercase(),
+            object: media.file_name.to_string(),
+            ..Default::default()
+        };
+
+        let download_obj = self
+            .gcs_client
+            .download_streamed_object(&download_req, &Range::default())
+            .await?;
+
+        let mut headers = HeaderMap::new();
+        headers.append(
+            CONTENT_TYPE,
+            HeaderValue::from_str(&media.content_type).unwrap(),
+        );
+
+        Ok((headers, Body::from_stream(download_obj)).into_response())
+    }
+
+    // TODO:
+    // Implement streaming versions of upload AND download
+}
